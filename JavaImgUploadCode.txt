@@ -1,0 +1,169 @@
+===================
+CreatePage.java
+=====================
+
+/* Global Variables */
+
+   private ImageIcon format=null;
+   String fname=null;
+   int s=0;
+   byte[] pimage=null;
+   Connection conn=null;
+
+
+/*upload button code */
+private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        // TODO add your handling code here:
+        
+        // using this code you can brows image and image set to lable
+
+        JFileChooser fchoser=new JFileChooser();
+        fchoser.showOpenDialog(null);
+        File f=fchoser.getSelectedFile();
+        fname=f.getAbsolutePath();
+        ImageIcon micon=new ImageIcon(fname);        
+        try {
+            File image=new File(fname);
+            FileInputStream fis=new FileInputStream(image);
+            ByteArrayOutputStream baos=new ByteArrayOutputStream();
+
+            byte[] buf=new byte[1024];
+            for(int readnum; (readnum=fis.read(buf)) !=-1;)
+            {            
+                baos.write(buf,0,readnum);                
+            }
+
+            pimage=baos.toByteArray();
+            jTextField2.setText(fname);
+            jLabel4.setIcon(resizeImage(fname, buf));
+
+        } catch (Exception e) {
+        }       
+    }
+
+
+=================================
+/*  Save Button Code */
+============================
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
+
+        if(jTextField1.getText().equals("")){
+            JOptionPane.showMessageDialog(null,"Full Name is empty...");
+        }
+        else if(jTextField2.getText().equals("")){
+            JOptionPane.showMessageDialog(null,"Photo is empty...");
+            
+        }
+        else{
+            
+             try {
+            
+            Database db=new Database();
+            Connection conn=db.getConnection();
+            
+             String q= "INSERT INTO students(fullname, photo) VALUES (?,?)";               
+               PreparedStatement pst=conn.prepareStatement(q);                
+                pst.setString(1, jTextField1.getText());
+                pst.setBytes(2, pimage);                
+                pst.execute(); 
+                JOptionPane.showMessageDialog(null,"Saving Success...");
+                conn.close();
+                
+                
+                this.dispose();
+                IndexPage indexpage=new IndexPage();
+                indexpage.setVisible(true);
+                
+                
+        } catch (Exception e) {
+            e.getMessage();
+        }
+            
+        }
+       
+    }
+
+
+
+
+=================================
+
+/* image resize code */
+
+private Icon resizeImage(String imagePath, byte[] pic) {
+        
+         ImageIcon myImage=null;
+        if(imagePath !=null)
+        {
+        myImage=new ImageIcon(imagePath);
+        
+        }else{
+         myImage=new ImageIcon(pic);
+        }
+                
+        Image img=myImage.getImage();
+        Image img2=img.getScaledInstance(jLabel4.getHeight(),    jLabel4.getWidth(),  Image.SCALE_SMOOTH);
+        ImageIcon image=new ImageIcon(img2);
+        return image;
+        
+    }
+
+
+
+=======================
+IndexPage.java
+====================
+
+private void loadData() {
+         
+        byte[] fileBytes;
+                
+                 try
+                 {
+                     Database db=new Database();
+                     Connection conn=db.getConnection();
+                     
+                         String query = "select * from students";
+                         Statement state = conn.createStatement();
+                         ResultSet rs = state.executeQuery(query);
+                         
+                         int x_pos=100;
+                         int y_pos=100;
+                         
+                        while(rs.next())
+                        {
+                                 String fullname=rs.getString("fullname");
+                                  fileBytes = rs.getBytes("photo");
+                                  
+                                  JLabel name_lb=new JLabel(fullname);
+                                  name_lb.setBounds(x_pos,y_pos,200,30);
+                                  
+                                  
+                                   //JOptionPane.showMessageDialog(null,"count row..");
+                                  this.add(name_lb);
+                                  
+                                  
+                                  ImageIcon icon=new ImageIcon(fileBytes);
+                                  JLabel photo_lb=new JLabel(icon);
+                                  photo_lb.setBounds(x_pos+150,y_pos,200,200);
+                                  this.add(photo_lb);
+                                    
+                                   y_pos=y_pos+200;
+                                  
+                                 
+                                       
+                        }        
+
+                 }
+                 catch (Exception e)
+                 {
+                         e.printStackTrace();
+                 }
+        
+        
+    }
+
+==============================
+
+
